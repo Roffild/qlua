@@ -361,12 +361,24 @@ function roffild.genTransId()
     return tostring(math.ceil(os.clock() * 1000) % 0x7FFFFFFF)
 end
 
+---Определяет примерное количество цифр, которое должно стоять после символа десятичной точки.
+---@param num number Число
+---@param precision? number Количество цифр после точки
+---@return number #Число
+function roffild.round(num, precision)
+    local mult = 10^(precision or 0)
+    if num < 0 then
+        return math.ceil(num * mult - 0.5) / mult
+    end
+    return math.floor(num * mult + 0.5) / mult
+end
+
 ---Определяет точное количество цифр, которое должно стоять после символа десятичной точки.
 ---@param price string|number Цена
----@param precision string|number Количество цифр после точки
+---@param precision? string|number Количество цифр после точки
 ---@return string #Строка
 function roffild.roundPrice(price, precision)
-    return string.format("%." .. tostring(precision) .. "f", tonumber(price))
+    return string.format("%." .. tostring(precision or "0") .. "f", tonumber(price))
 end
 
 ---@class roffildcreateOrderReturn
