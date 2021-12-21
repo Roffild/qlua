@@ -186,14 +186,14 @@ end
 ---@field lasttrade_num number Номер последней сделки
 
 ---Синхронизирует `futures_client_holding` с `trades` (обход бага).
+---@param timeout? number Ожидание в секундах (по умолчанию = 3)
 ---@return roffildgetFuturesHoldingPriceReturn[] #Возвращает `futures_client_holding` с ценой и номером последней сделки.
-function roffild.getFuturesHoldingPrice()
-    if roffild_vars.GETFUTURESHOLDINGPRICE_TABLE == nil then
-        ---@type roffildgetFuturesHoldingPriceReturn
-        roffild_vars.GETFUTURESHOLDINGPRICE_TABLE = {}
-        roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL = 0
-        roffild_vars.GETFUTURESHOLDINGPRICE_COUNT = 0
+function roffild.getFuturesHoldingPrice(timeout)
+    local count = getNumberOf("trades")
+    if count == nil then
+        return {}
     end
+
     ---@type roffildgetFuturesHoldingPriceReturn
     local result = {}
     local total = 0
@@ -205,24 +205,21 @@ function roffild.getFuturesHoldingPrice()
             total = total + math.abs(v.totalnet)
         end
     end
-    if roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL == total then
-        return roffild_vars.GETFUTURESHOLDINGPRICE_TABLE
-    end
 
-    local count = getNumberOf("trades")
-    if count == nil then
-        return {}
-    end
-    if total == 0 then
-        roffild_vars.GETFUTURESHOLDINGPRICE_TABLE = {}
-        roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL = 0
+    if roffild_vars.GETFUTURESHOLDINGPRICE_TABLE == nil or total == 0 then -- первый вызов или позиций нет
+        ---@type roffildgetFuturesHoldingPriceReturn
+        roffild_vars.GETFUTURESHOLDINGPRICE_TABLE = result
+        roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL = total
         roffild_vars.GETFUTURESHOLDINGPRICE_COUNT = count
+    end
+    if roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL == total then -- изменений нет
         return roffild_vars.GETFUTURESHOLDINGPRICE_TABLE
     end
 
-    while roffild_vars.GETFUTURESHOLDINGPRICE_COUNT == count do
+    timeout = os.clock() + (timeout or 3.0)
+    while roffild_vars.GETFUTURESHOLDINGPRICE_COUNT == count do -- синхрон
         sleep(10)
-        if roffild.isTradingAllowed() then
+        if os.clock() > timeout or roffild.isTradingAllowed() ~= true then
             return {}
         end
         count = getNumberOf("trades")
