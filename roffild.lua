@@ -206,12 +206,6 @@ function roffild.getFuturesHoldingPrice(timeout)
         end
     end
 
-    if roffild_vars.GETFUTURESHOLDINGPRICE_TABLE == nil or total == 0 then -- первый вызов или позиций нет
-        ---@type roffildgetFuturesHoldingPriceReturn
-        roffild_vars.GETFUTURESHOLDINGPRICE_TABLE = result
-        roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL = total
-        roffild_vars.GETFUTURESHOLDINGPRICE_COUNT = count
-    end
     if roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL == total then -- изменений нет
         return roffild_vars.GETFUTURESHOLDINGPRICE_TABLE
     end
