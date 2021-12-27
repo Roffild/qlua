@@ -196,17 +196,17 @@ function roffild.getFuturesHoldingPrice(timeout)
 
     ---@type roffildgetFuturesHoldingPriceReturn
     local result = {}
-    local total = 0
+    local price = 0.0
     for k, v in pairs(roffild.getTable("futures_client_holding")) do
         if v.totalnet ~= nil and v.totalnet ~= 0 then
             v.lastprice = v.avrposnprice
             v.lasttrade_num = 0
             result[v.trdaccid .. v.sec_code] = v
-            total = total + math.abs(v.totalnet)
+            price = price + v.avrposnprice
         end
     end
 
-    if roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL == total then -- изменений нет
+    if math.abs((roffild_vars.GETFUTURESHOLDINGPRICE_PRICE or -1.0) - price) < 1.0e-8 then -- изменений нет
         return roffild_vars.GETFUTURESHOLDINGPRICE_TABLE
     end
 
@@ -239,7 +239,7 @@ function roffild.getFuturesHoldingPrice(timeout)
     end
 
     roffild_vars.GETFUTURESHOLDINGPRICE_TABLE = result
-    roffild_vars.GETFUTURESHOLDINGPRICE_TOTAL = total
+    roffild_vars.GETFUTURESHOLDINGPRICE_PRICE = price
     roffild_vars.GETFUTURESHOLDINGPRICE_COUNT = count
     return roffild_vars.GETFUTURESHOLDINGPRICE_TABLE
 end
