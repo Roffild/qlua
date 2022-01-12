@@ -722,4 +722,78 @@ function roffild.dumpTablesToFolder(path, table_names, last)
     end
 end
 
+--#region Logger
+
+---@class roffildLogger
+---@field LOG_PATH string Абсолютный путь к лог-файлу
+---@field LOG_FILE file* Открытый на добавление лог-файл
+roffild.logger = {}
+
+---Записать в лог JSON
+---@param level number
+---@param ... any
+function roffild.logger.log(level, ...)
+    local sd = os.sysdate()
+    local result = ""
+    local rdts = roffild.dumpToString
+    local flog = roffild.logger.LOG_FILE
+    local json_escape_char_map = {
+        ["\\"] = "\\",
+        ["/"] = "\\/",
+        ["\""] = "\"",
+        ["\b"] = "b",
+        ["\f"] = "f",
+        ["\n"] = "n",
+        ["\r"] = "r",
+        ["\t"] = "t",
+    }
+    local function json_escape_char(c)
+        return "\\" .. (json_escape_char_map[c] or string.format("u%04x", c:byte()))
+    end
+    for k, v in pairs({...}) do
+        result = result .. rdts(v)
+    end
+    if flog == nil then
+        roffild.logger.LOG_PATH = roffild.SCRIPT_PATH .. ".jlog"
+        roffild.logger.LOG_FILE = io.open(roffild.logger.LOG_PATH, "a")
+        flog = roffild.logger.LOG_FILE
+    end
+    flog:write("{\"l\":", level, ",\"d\":[", sd.year, ",", sd.month, ",", sd.day, ",",
+        sd.hour, ",", sd.min, ",", sd.sec, ",", sd.mcs, "],\"m\":\"",
+        result:gsub('[%z\1-\31\\"]', json_escape_char), "\"},\n")
+    flog:flush()
+end
+
+---Trace level
+---@param ... any
+function roffild.logger.trace(...)
+    roffild.logger.log(1, ...)
+end
+
+---Debug level
+---@param ... any
+function roffild.logger.debug(...)
+    roffild.logger.log(2, ...)
+end
+
+---Info level
+---@param ... any
+function roffild.logger.info(...)
+    roffild.logger.log(3, ...)
+end
+
+---Error level
+---@param ... any
+function roffild.logger.error(...)
+    roffild.logger.log(4, ...)
+end
+
+---Fatal level
+---@param ... any
+function roffild.logger.fatal(...)
+    roffild.logger.log(5, ...)
+end
+
+--#endregion
+
 return roffild
