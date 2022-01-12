@@ -206,7 +206,11 @@ function roffild.getFuturesHoldingPrice(timeout)
         end
     end
 
-    if math.abs((roffild_vars.GETFUTURESHOLDINGPRICE_PRICE or -1.0) - price) < 1.0e-8 then -- изменений нет
+    if
+        roffild_vars.GETFUTURESHOLDINGPRICE_TABLE ~= nil
+        and roffild_vars.GETFUTURESHOLDINGPRICE_COUNT == count
+        and math.abs(roffild_vars.GETFUTURESHOLDINGPRICE_PRICE - price) < 1.0e-8
+    then -- изменений нет
         return roffild_vars.GETFUTURESHOLDINGPRICE_TABLE
     end
 
