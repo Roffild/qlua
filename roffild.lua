@@ -750,6 +750,14 @@ function roffild.logger.log(level, ...)
     local function json_escape_char(c)
         return "\\" .. (json_escape_char_map[c] or string.format("u%04x", c:byte()))
     end
+    local dbinfo = debug.getinfo(3, "Snl")
+    if dbinfo ~= nil then
+        dbinfo = ',"f":"' .. (dbinfo.name or "") ..
+                 '","ln":' .. tostring(dbinfo.currentline) ..
+                 ',"p":"' .. dbinfo.source:gsub("\\", "\\\\") .. '"'
+    else
+        dbinfo = ',"f":"","ln":-1,"p":""'
+    end
     for k, v in pairs({...}) do
         result = result .. rdts(v)
     end
@@ -758,9 +766,9 @@ function roffild.logger.log(level, ...)
         roffild.logger.LOG_FILE = io.open(roffild.logger.LOG_PATH, "a")
         flog = roffild.logger.LOG_FILE
     end
-    flog:write("{\"l\":", level, ",\"d\":[", sd.year, ",", sd.month, ",", sd.day, ",",
-        sd.hour, ",", sd.min, ",", sd.sec, ",", sd.mcs, "],\"m\":\"",
-        result:gsub('[%z\1-\31\\"]', json_escape_char), "\"},\n")
+    flog:write('{"l":', level, ',"d":[', sd.year, ',', sd.month, ',', sd.day, ',',
+        sd.hour, ',', sd.min, ',', sd.sec, ',', sd.mcs, '],"m":"',
+        result:gsub('[%z\1-\31\\"]', json_escape_char), '"', dbinfo, '}\n')
     flog:flush()
 end
 
@@ -782,15 +790,15 @@ function roffild.logger.info(...)
     roffild.logger.log(3, ...)
 end
 
----Error level
+---Warning level
 ---@param ... any
-function roffild.logger.error(...)
+function roffild.logger.warn(...)
     roffild.logger.log(4, ...)
 end
 
----Fatal level
+---Error level
 ---@param ... any
-function roffild.logger.fatal(...)
+function roffild.logger.error(...)
     roffild.logger.log(5, ...)
 end
 
