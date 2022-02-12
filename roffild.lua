@@ -354,7 +354,8 @@ function roffild.getDeals(last, order_num, trans_id, sec_code, class_code, accou
 end
 
 ---Генерацая TRANS_ID для `sendTransaction()`. \
----На практике уникальность НЕОБЯЗАТЕЛЬНА и можно использовать "1" или свое магическое число.
+---Для `roffild.sendStatus` уникальность ВАЖНА! \
+---В самом QUIK это число не проверяется на уникальность и не используется.
 ---@return string #Строка
 function roffild.genTransId()
     return tostring(math.ceil(os.clock() * 1000) % 0x7FFFFFFF)
@@ -606,7 +607,8 @@ end
 ---@field status number -1=nil | 0=исполнена | 1=активна
 
 ---Получает статус транзакции из заявки и/или сделки. \
----status = -1=nil | 0=исполнена | 1=активна
+---status = -1=nil | 0=исполнена | 1=активна \
+---ВАЖНА УНИКАЛЬНОСТЬ `TRANS_ID`, чтоб не получить информацию по старой заявке!
 ---@param trans table Возврат из функций `send*()`
 ---@param stops? boolean Стоп-заявка?
 ---@return roffildsendStatusReturn #Здесь `status`
