@@ -728,6 +728,113 @@ function roffild.dumpTablesToFolder(path, table_names, last)
     end
 end
 
+--#region Indicators
+
+---DataSource for Indicator
+---@return fnCreateDataSourceReturn
+function roffild.indicToDataSource()
+    return {
+        ["O"] = function (self, index) return O(index) end,
+        ["H"] = function (self, index) return H(index) end,
+        ["L"] = function (self, index) return L(index) end,
+        ["C"] = function (self, index) return C(index) end,
+        ["V"] = function (self, index) return V(index) end,
+        ["T"] = function (self, index) return T(index) end,
+        ["Size"] = function (self) return Size() end,
+        ["Close"] = function (self) return true end,
+        ["SetEmptyCallback"] = function (self) return true end,
+        ["SetUpdateCallback"] = function (self, callback_function) return true end,
+    }
+end
+
+---Возвращает цену.
+---@param datasource fnCreateDataSourceReturn DataSource
+---@param index number Индексы свечек начинаются с 1
+---@param pricetype string Тип цены: "O", "H", "L", "C", "V", "M"(edian), "T"(ypical), "W"(eighted)
+---@return number?
+function roffild.indicPrice(datasource, index, pricetype)
+    if pricetype == nil or #pricetype == 0 then
+        return nil
+    end
+    local t = string.upper(string.sub(pricetype, 1, 1))
+    if t == "O" then
+        return datasource:O(index)
+    elseif t == "H" then
+        return datasource:H(index)
+    elseif t == "L" then
+        return datasource:L(index)
+    elseif t == "C" then
+        return datasource:C(index)
+    elseif t == "V" then
+        return datasource:V(index)
+    elseif t == "M" then
+        return (datasource:H(index) + datasource:L(index)) / 2.0
+    elseif t == "T" then
+        return (datasource:H(index) + datasource:L(index) + datasource:C(index)) / 3.0
+    elseif t == "W" then
+        return (datasource:H(index) + datasource:L(index) + (datasource:C(index) * 2.0)) / 4.0
+    end
+    return nil
+end
+
+---Moving Average
+---@param datasource fnCreateDataSourceReturn DataSource
+---@param period number Период
+---@param shift number Сдвиг в барах
+---@param pricetype string Тип цены: "O", "H", "L", "C", "V", "M"(edian), "T"(ypical), "W"(eighted)
+---@return number?
+function roffild.indicMovingAverage(datasource, period, shift, pricetype)
+    if shift == nil then
+        shift = 0
+    end
+    local stop = datasource:Size() - shift
+    local start = stop - (period - 1)
+    local result = 0.0
+    local ip = roffild.indicPrice
+    if start < 1 or stop < 1 then
+        return nil
+    end
+    for x = start, stop, 1 do
+        result = result + ip(datasource, x, pricetype)
+    end
+    return result / period
+end
+
+---Money Flow Index
+---@param datasource fnCreateDataSourceReturn DataSource
+---@param period number Период
+---@param shift number Сдвиг в барах
+---@return number?
+function roffild.indicMoneyFlowIndex(datasource, period, shift)
+    if shift == nil then
+        shift = 0
+    end
+    local stop = datasource:Size() - shift
+    local start = stop - period
+    if start < 1 or stop < 1 then
+        return nil
+    end
+    local pos = 0.0
+    local neg = 0.0
+    local last = (datasource:H(start) + datasource:L(start) + datasource:C(start)) / 3.0
+    for x = start+1, stop, 1 do
+        local tp = (datasource:H(x) + datasource:L(x) + datasource:C(x)) / 3.0
+        if tp >= last then
+            pos = pos + (tp * datasource:V(x))
+        else
+            neg = neg + (tp * datasource:V(x))
+        end
+        last = tp
+    end
+    if neg ~= 0.0 then
+        return 100.0 - (100.0 / (1.0 + (pos / neg)))
+    else
+        return 100.0
+    end
+end
+
+--#endregion
+
 --#region Logger
 
 ---@class roffildLogger
