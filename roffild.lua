@@ -182,6 +182,7 @@ function roffild.getParamExAll()
 end
 
 ---@class roffildgetFuturesHoldingPriceReturn : qluaClientAccountPositionsFutures
+---@field class_code string "SPBFUT"
 ---@field lastprice number Цена последней сделки
 ---@field lasttrade_num number Номер последней сделки
 
@@ -199,6 +200,7 @@ function roffild.getFuturesHoldingPrice(timeout)
     local price = 0.0
     for k, v in pairs(roffild.getTable("futures_client_holding")) do
         if v.totalnet ~= nil and v.totalnet ~= 0 then
+            v.class_code = "SPBFUT"
             v.lastprice = v.avrposnprice
             v.lasttrade_num = 0
             result[v.trdaccid .. v.sec_code] = v
@@ -217,7 +219,9 @@ function roffild.getFuturesHoldingPrice(timeout)
     timeout = os.clock() + (timeout or 3.0)
     while roffild_vars.GETFUTURESHOLDINGPRICE_COUNT == count do -- синхрон
         sleep(10)
-        if os.clock() > timeout or roffild.isTradingAllowed() ~= true then
+        if os.clock() > timeout then
+            break
+        elseif roffild.isTradingAllowed() ~= true then
             return {}
         end
         count = getNumberOf("trades")
