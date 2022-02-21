@@ -183,6 +183,7 @@ end
 
 ---@class roffildgetFuturesHoldingPriceReturn : qluaClientAccountPositionsFutures
 ---@field class_code string "SPBFUT"
+---@field issell boolean На продажу?
 ---@field lastprice number Цена последней сделки
 ---@field lasttrade_num number Номер последней сделки
 
@@ -201,6 +202,7 @@ function roffild.getFuturesHoldingPrice(timeout)
     for k, v in pairs(roffild.getTable("futures_client_holding")) do
         if v.totalnet ~= nil and v.totalnet ~= 0 then
             v.class_code = "SPBFUT"
+            v.issell = v.totalnet < 0
             v.lastprice = v.avrposnprice
             v.lasttrade_num = 0
             result[v.trdaccid .. v.sec_code] = v
