@@ -531,9 +531,11 @@ function roffild.sendStopOrder(stop_order)
     end
     if (stop_order.stopflags & 0x8) ~= 0 then
         trans.OFFSET_UNITS = "PERCENTS"
+        trans.OFFSET = tostring(stop_order.offset)
     end
     if (stop_order.stopflags & 0x10) ~= 0 then
         trans.SPREAD_UNITS = "PERCENTS"
+        trans.SPREAD = tostring(stop_order.spread)
     end
     if tonumber(stop_order.expiry) <= tonumber(os.date("%Y%m%d")) then
         trans.EXPIRY_DATE = "TODAY"
